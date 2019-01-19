@@ -143,25 +143,38 @@ def proc1(*args):
     with open(userfile,'r') as uf:
         for line in uf:
             userdata.append((line.strip()).split(','))
-            queue1.put(userdata[-1])
+            queue1.put(userdata[-1],True,1)
             print('Send userdata :{}'.format(userdata[-1]))
-            time.sleep(1)
+            #time.sleep(1)
 
 def proc2(*args):
     conf_dict = args[2]
-    #gongzi_list = []
-    income_tax = IncomeTaxcalculator(conf_dict,queue1.get())
-
-    queue2.put(income_tax.gongzi_list)
-    print('Send gongzi_list :{}'.format(income_tax.gongzi_list))
-    time.sleep(1)
+    while True:
+        #if (not queue1.empty()) :
+        try:
+            income_tax = IncomeTaxcalculator(conf_dict,queue1.get(True,1))
+            queue2.put(income_tax.gongzi_list,True,1)
+            print('Send gongzi_list :{}'.format(income_tax.gongzi_list))
+            #time.sleep(1)
+        except Empty :
+            return None
 
 def proc3(*args):
     gongzi_file = args[1]
+    print("gongzi_file ==> {}".format(gongzi_file))
+    gongzi_list = []
     with open(gongzi_file,'w+') as gf:
-        gf.seek(2,0)
-        csv.writer(gf).writerow(queue2.get())
-        time.sleep(1)
+        while True:
+            #if (not queue2.empty()):
+            try:
+                gf.seek(2,0)
+                gongzi_list = queue2.get(True,1)
+                print("gongzi_list = {}".format(gongzi_list))
+                csv.writer(gf).writerow(gongzi_list)
+                #csv.writer(gf).writerow(queue2.get(True,1))
+                #time.sleep(1)
+            except Empty :
+                return None
 
 if __name__ == '__main__':
     if len(sys.argv) <= 1 :
@@ -182,7 +195,7 @@ if __name__ == '__main__':
         #Process(target = proc1,args=(queue2,chuli_args.gongzi_file)).start()
         p1 = Process(target = proc1,args=(queue1,chuli_args.user_file))
         p2 = Process(target = proc2,args=(queue1,queue2,chuli_config.config_dict))
-        p3 = Process(target = proc1,args=(queue2,chuli_args.gongzi_file))
+        p3 = Process(target = proc3,args=(queue2,chuli_args.gongzi_file))
 
         p1.start()
         p2.start()

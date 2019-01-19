@@ -2,6 +2,7 @@
 import sys
 import csv
 import os
+import time
 from multiprocessing import Process,Queue
 
 queue1 = Queue()
@@ -111,45 +112,52 @@ class IncomeTaxcalculator(object):
         #return a list for cun fang shui huo gongzi
 
 # *************
-'''
-class UserData(object):
+#"""
+#class UserData(object):
+#
+#    def __init__(self,userfile,conf_dict,gongzi_file):
+#        self.userdata = self._read_users_data(userfile,conf_dict,gongzi_file)
+#
+#    def _read_users_data(self,userfile,conf_dict,gongzi_file):
+#        userdata = []
+#        with open(gongzi_file,'w+') as gf:
+#
+#            with open(userfile,'r') as uf:
+#                for line in uf:
+#                    userdata.append((line.strip()).split(","))
+#                    #userdata is 2 wei shuzu
+#                    income_tax = IncomeTaxcalculator(conf_dict,userdata)
+#                    print(income_tax.gongzi_list)
+#                    csv.writer(gf).writerow(income_tax.gongzi_list)
+#
+#
+#        return userdata
+#"""
 
-    def __init__(self,userfile,conf_dict,gongzi_file):
-        self.userdata = self._read_users_data(userfile,conf_dict,gongzi_file)
-
-    def _read_users_data(self,userfile,conf_dict,gongzi_file):
-        userdata = []
-        with open(gongzi_file,'w+') as gf:
-
-            with open(userfile,'r') as uf:
-                for line in uf:
-                    userdata.append((line.strip()).split(","))
-                    #userdata is 2 wei shuzu
-                    income_tax = IncomeTaxcalculator(conf_dict,userdata)
-                    print(income_tax.gongzi_list)
-                    csv.writer(gf).writerow(income_tax.gongzi_list)
-
-
-        return userdata
-'''
-# ^^^^^^^^^^^^^^^^^^
-def proc1(userfile):
+def proc1(*args):
+    userfile = args[1]
     userdata = []
     with open(userfile,'r') as uf:
         for line in uf:
-            userdata.append(line.strip()).split(','))
+            userdata.append((line.strip()).split(','))
             queue1.put(userdata)
             print('Send userdata :{}'.format(userdata))
+            time.sleep(1)
 
-def proc2(conf_dict):
+def proc2(*args):
+    conf_dict = args[2]
     #gongzi_list = []
     income_tax = IncomeTaxcalculator(conf_dict,queue1.get())
 
     queue2.put(income_tax.gongzi_list)
-
-def proc3(gongzi_file):
-    with open(gongzi_file) as gf:
+    print('Send gongzi_list :{}'.format(income_tax.gongzi_list))
+    time.sleep(1)
+def proc3(*args):
+    gongzi_file = args[1]
+    with open(gongzi_file,'w+') as gf:
+        gf.seek(2,0)
         csv.writer(gf).writerow(queue2.get())
+        time.sleep(1)
 
 
 
@@ -171,12 +179,20 @@ if __name__ == '__main__':
         #chuli_user = UserData(chuli_args.user_file,chuli_config.config_dict,chuli_args.gongzi_file)
         #print(chuli_user.userdata)
 
-        Process(target = proc1,args=(queue1,)).start()
-        Process(target = proc2,args=(queue1,queue2,)).start()
-        Process(target = proc1,args=(queue2,)).start()
+        #Process(target = proc1,args=(queue1,chuli_args.user_file)).start()
+        #Process(target = proc2,args=(queue1,queue2,chuli_config.config_dict)).start()
+        #Process(target = proc1,args=(queue2,chuli_args.gongzi_file)).start()
+        p1 = Process(target = proc1,args=(queue1,chuli_args.user_file))
+        p2 = Process(target = proc2,args=(queue1,queue2,chuli_config.config_dict))
+        p3 = Process(target = proc1,args=(queue2,chuli_args.gongzi_file))
 
+        p1.start()
+        p2.start()
+        p3.start()
 
-
+        p1.join()
+        p2.join()
+        p3.join()
 
 
 

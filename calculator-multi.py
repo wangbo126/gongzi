@@ -5,8 +5,6 @@ import os
 import time
 from multiprocessing import Process,Queue
 
-queue1 = Queue()
-queue2 = Queue()
 
 
 class Args(object):
@@ -156,7 +154,7 @@ def proc2(*args):
             queue2.put(income_tax.gongzi_list,True,1)
             print('Send gongzi_list :{}'.format(income_tax.gongzi_list))
             #time.sleep(1)
-        except Empty :
+        except :
             return None
 
 def proc3(*args):
@@ -167,19 +165,21 @@ def proc3(*args):
         while True:
             #if (not queue2.empty()):
             try:
-                gf.seek(2,0)
+                #gf.seek(2,0)
                 gongzi_list = queue2.get(True,1)
                 print("gongzi_list = {}".format(gongzi_list))
                 csv.writer(gf).writerow(gongzi_list)
                 #csv.writer(gf).writerow(queue2.get(True,1))
                 #time.sleep(1)
-            except Empty :
+            except :
                 return None
 
 if __name__ == '__main__':
     if len(sys.argv) <= 1 :
         print("Usage:{} -c test.cfg -d user.csv -o gongzi.csv".format(sys.argv[0]))
     else:
+        queue1 = Queue()
+        queue2 = Queue()
         chuli_args = Args()
         #print(chuli_args.config_file)
         #print(chuli_args.user_file)
@@ -201,9 +201,18 @@ if __name__ == '__main__':
         p2.start()
         p3.start()
 
-        p1.join()
-        p2.join()
-        p3.join()
+        time.sleep(3) # Important zeng jia yanchi shi de queue not empty 
+                      # in order to bao zheng queue1 queue2 not empty when 
+                      # proc1 proc2 proc3 beginning!!!
+        if (queue1.empty() and queue2.empty()) :
+            p1.terminate()
+            p1.join()
+        #if (queue2.empty()):
+            p2.terminate()
+            p2.join()
+            p3.terminate()
+            p3.join()
+
 
 
 

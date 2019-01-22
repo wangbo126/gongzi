@@ -116,6 +116,8 @@ class IncomeTaxcalculator(object):
         gongzi_list.append(str(format(she_bao,".2f")))
         gongzi_list.append(str(format(ying_na_shui,".2f")))
         gongzi_list.append(str(format(shui_huo_gongzi,".2f")))
+        t = datetime.datetime.now()
+        gongzi_list.append(t.strftime("%Y-%m-%d %H:%M:%S"))
 
         return gongzi_list
         #return a list for cun fang shui huo gongzi
@@ -157,24 +159,24 @@ if __name__ == '__main__':
         #print("myoptlist = {}\nmyargs = {}".format(myoptlist,myargs))
         myargs_dict = {}
         myargs_dict = dict(myoptlist)
-        print("myargs_dict = {} ".format(myargs_dict))
+        #print("myargs_dict = {} ".format(myargs_dict))
         #print("myargs_dict['-C'] = {} ".format(myargs_dict['-C']))
         
         chuli_config = myConfig(myargs_dict['-C'].upper(),myargs_dict['-c'])
-        print("chuli_config.config_dict = {}".format(chuli_config.config_dict))
+        #print("chuli_config.config_dict = {}".format(chuli_config.config_dict))
         
         #chuli_config = Config(chuli_args.config_file)
         #print(chuli_config.config_dict)
         
         #chuli_user = UserData(chuli_args.user_file,chuli_config.config_dict,chuli_args.gongzi_file)
         #print(chuli_user.userdata)
-        print("****************")
-        print(myargs_dict['-d'])
-        print(chuli_config.config_dict)
-        print(myargs_dict['-o'])
-        print("^^^^^^^^^^^^^^^^")
+        #print("****************")
+        #print(myargs_dict['-d'])
+        #print(chuli_config.config_dict)
+        #print(myargs_dict['-o'])
+        #print("^^^^^^^^^^^^^^^^")
         chuli_user = UserData(myargs_dict['-d'],chuli_config.config_dict,myargs_dict['-o'])
-        print(chuli_user.userdata)
+        #print(chuli_user.userdata)
 
 
 

@@ -2,6 +2,10 @@
 import sys
 import csv
 import os
+import getopt
+import configparser
+import datetime
+
 
 class Args(object):
     def __init__(self):
@@ -56,6 +60,17 @@ class Config(object):
                 self.config_dict[mylist[0].strip()] = mylist[1].strip()
 
         return self.config_dict
+class myConfig(object):
+    def __init__(self,cityname,configfile):
+        self.config_dict = {}
+        self.my_config = self.read_config(cityname,configfile)
+
+    def read_config(self,cityname,configfile):
+        cf = configparser.ConfigParser()
+        cf.read(configfile)
+        self.config_dict = dict(cf.items(cityname))
+
+        return self.config_dict
 
 
 class IncomeTaxcalculator(object):
@@ -66,13 +81,13 @@ class IncomeTaxcalculator(object):
     def jisuan_gongzi(self,conf_dict,userdata):
         gongzi_list = []
         
-        jiaofei_bili = float(conf_dict['YangLao']) + float(conf_dict['YiLiao']) + float(conf_dict['ShiYe']) + float(conf_dict['GongShang']) + float(conf_dict['ShengYu']) + float(conf_dict['GongJiJin'])
+        jiaofei_bili = float(conf_dict['yanglao']) + float(conf_dict['yiliao']) + float(conf_dict['shiye']) + float(conf_dict['gongshang']) + float(conf_dict['shengyu']) + float(conf_dict['gongjijin'])
         
         shui_qian_gongzi = float(userdata[-1][1])
-        if shui_qian_gongzi < float(conf_dict['JiShuL']) :
-            she_bao = float(conf_dict['JiShuL']) * jiaofei_bili
-        elif shui_qian_gongzi > float(conf_dict['JiShuH']) :
-            she_bao = float(conf_dict['JiShuH']) * jiaofei_bili
+        if shui_qian_gongzi < float(conf_dict['jishul']) :
+            she_bao = float(conf_dict['jishul']) * jiaofei_bili
+        elif shui_qian_gongzi > float(conf_dict['jishuh']) :
+            she_bao = float(conf_dict['jishuh']) * jiaofei_bili
         else :
             she_bao = shui_qian_gongzi * jiaofei_bili
 
@@ -101,6 +116,8 @@ class IncomeTaxcalculator(object):
         gongzi_list.append(str(format(she_bao,".2f")))
         gongzi_list.append(str(format(ying_na_shui,".2f")))
         gongzi_list.append(str(format(shui_huo_gongzi,".2f")))
+        t = datetime.datetime.now()
+        gongzi_list.append(t.strftime("%Y-%m-%d %H:%M:%S"))
 
         return gongzi_list
         #return a list for cun fang shui huo gongzi
@@ -132,17 +149,33 @@ class UserData(object):
 
 if __name__ == '__main__':
     if len(sys.argv) <= 1 :
-        print("Usage:{} -c test.cfg -d user.csv -o gongzi.csv".format(sys.argv[0]))
+        print("Usage:{} -C cityname -c test.cfg -d user.csv -o gongzi.csv".format(sys.argv[0]))
     else:
-        chuli_args = Args()
+        #chuli_args = Args()
         #print(chuli_args.config_file)
         #print(chuli_args.user_file)
-    
         
-        chuli_config = Config(chuli_args.config_file)
+        myoptlist,myargs = getopt.getopt(sys.argv[1:],"C:c:d:o:")
+        #print("myoptlist = {}\nmyargs = {}".format(myoptlist,myargs))
+        myargs_dict = {}
+        myargs_dict = dict(myoptlist)
+        #print("myargs_dict = {} ".format(myargs_dict))
+        #print("myargs_dict['-C'] = {} ".format(myargs_dict['-C']))
+        
+        chuli_config = myConfig(myargs_dict['-C'].upper(),myargs_dict['-c'])
+        #print("chuli_config.config_dict = {}".format(chuli_config.config_dict))
+        
+        #chuli_config = Config(chuli_args.config_file)
         #print(chuli_config.config_dict)
         
-        chuli_user = UserData(chuli_args.user_file,chuli_config.config_dict,chuli_args.gongzi_file)
+        #chuli_user = UserData(chuli_args.user_file,chuli_config.config_dict,chuli_args.gongzi_file)
+        #print(chuli_user.userdata)
+        #print("****************")
+        #print(myargs_dict['-d'])
+        #print(chuli_config.config_dict)
+        #print(myargs_dict['-o'])
+        #print("^^^^^^^^^^^^^^^^")
+        chuli_user = UserData(myargs_dict['-d'],chuli_config.config_dict,myargs_dict['-o'])
         #print(chuli_user.userdata)
 
 
